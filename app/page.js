@@ -105,6 +105,7 @@ function InvestForm({ data, group, refresh }) {
   const saved = loadDraft(data.round, group.id);
   const [a, setA] = useState(saved?.a ?? '');
   const [b, setB] = useState(saved?.b ?? '');
+  const [reason, setReason] = useState(saved?.reason ?? '');
   const [editing, setEditing] = useState(!submitted);
   const [confirm, setConfirm] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -115,6 +116,7 @@ function InvestForm({ data, group, refresh }) {
   const keep = group.coins - A - B;
   const over = keep < 0;
   const invalid = [a, b].some((v) => v !== '' && !/^\d+$/.test(String(v)));
+  const noReason = reason.trim() === '';
 
   // 다른 기기에서 이미 제출된 경우 → 제출 완료 화면으로
   useEffect(() => { if (submitted && !busy && !confirm) setEditing(false); }, [submitted]); // eslint-disable-line
@@ -125,11 +127,11 @@ function InvestForm({ data, group, refresh }) {
       const r = await fetch('/api/student', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ groupId: group.id, a: A, b: B, round: data.round }),
+        body: JSON.stringify({ groupId: group.id, a: A, b: B, reason: reason.trim(), round: data.round }),
       });
       const j = await r.json();
       if (!j.ok) throw new Error(j.error);
-      saveDraft(data.round, group.id, { a: A, b: B });
+      saveDraft(data.round, group.id, { a: A, b: B, reason: reason.trim() });
       setConfirm(false); setEditing(false);
       refresh();
     } catch (e) {
@@ -148,6 +150,7 @@ function InvestForm({ data, group, refresh }) {
             <b style={{ color: 'var(--b)' }}>{s.companies.B.name}</b> {coin(d.b)}
           </div>
         )}
+        {d?.reason && <div className="reason-box">💬 {d.reason}</div>}
         <div className="look-up">👀 앞 화면을 봐 주세요</div>
         <button className="ghost" onClick={() => setEditing(true)}>✏️ 수정하기</button>
       </div>
@@ -175,7 +178,14 @@ function InvestForm({ data, group, refresh }) {
         <b className={over ? 'error' : ''} style={{ fontSize: 22 }}>{coin(keep)}</b>
       </div>
       {over && <p className="error">가진 코인보다 많이 투자할 수 없어요.</p>}
-      <button className="primary big" disabled={over || invalid} onClick={() => { setErr(''); setConfirm(true); }}>
+      <label className="card" style={{ display: 'block' }}>
+        <b>왜 이렇게 투자했나요?</b>
+        <div className="muted small" style={{ marginBottom: 8 }}>그래프에서 무엇을 보고 결정했는지 간단히 적어 주세요.</div>
+        <textarea rows={3} maxLength={150} value={reason} onChange={(e) => setReason(e.target.value)}
+          placeholder="예: 기온이 계속 오르고 있어서 시원한 음료가 더 많이 팔릴 것 같아요." />
+        <div className="muted small" style={{ textAlign: 'right' }}>{reason.length}/150</div>
+      </label>
+      <button className="primary big" disabled={over || invalid || noReason} onClick={() => { setErr(''); setConfirm(true); }}>
         {submitted ? '수정해서 다시 제출' : '제출하기'}
       </button>
       {submitted && <button className="ghost" onClick={() => setEditing(false)}>수정 취소</button>}
@@ -191,6 +201,7 @@ function InvestForm({ data, group, refresh }) {
                 <tr><td className="muted">남기는 코인</td><td>{coin(keep)}</td></tr>
               </tbody>
             </table>
+            <div className="reason-box" style={{ marginBottom: 16 }}>💬 {reason.trim()}</div>
             {err && <p className="error">{err}</p>}
             <div className="row">
               <button className="grow" disabled={busy} onClick={() => setConfirm(false)}>다시 생각하기</button>

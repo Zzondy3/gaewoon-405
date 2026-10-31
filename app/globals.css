@@ -111,3 +111,10 @@ table.tbl th { font-size: 14px; color: var(--muted); font-weight: 600; }
 @media (max-width: 380px) {
   .co-grid { grid-template-columns: 1fr; }
 }
+
+/* 투자 이유 */
+textarea { resize: vertical; }
+.reason-box { background: #f3f4f6; border-radius: 12px; padding: 10px 14px; text-align: left; font-size: 16px; }
+.reasons { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
+.reasons > div { background: #f9fafb; border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px; }
+.reasons > div.empty { color: var(--muted); }

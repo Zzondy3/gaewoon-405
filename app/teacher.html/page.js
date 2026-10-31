@@ -127,7 +127,7 @@ function Dashboard({ pin, onLogout }) {
         {msg && <div className="warn">{msg}</div>}
         {error && <div className="warn">연결 오류: {error}</div>}
 
-        {s && phase !== 'final' && <RoundPanel s={s} phase={phase} lastResult={lastResult} groups={groups} busy={busy} act={act} />}
+        {s && phase !== 'final' && <RoundPanel s={s} phase={phase} lastResult={lastResult} groups={groups} subs={subs} busy={busy} act={act} />}
         {phase === 'final' && <Final groups={groups} />}
 
         <div className="t-cols">
@@ -139,7 +139,7 @@ function Dashboard({ pin, onLogout }) {
   );
 }
 
-function RoundPanel({ s, phase, lastResult, groups, busy, act }) {
+function RoundPanel({ s, phase, lastResult, groups, subs, busy, act }) {
   return (
     <div className="card stack">
       <div>
@@ -161,6 +161,22 @@ function RoundPanel({ s, phase, lastResult, groups, busy, act }) {
         ))}
       </div>
       <div className="small muted"><b>결과 해설:</b> {s.result.headline} — {s.result.explanation}</div>
+
+      <h3>📝 모둠별 투자 이유</h3>
+      <div className="reasons">
+        {groups.map((g) => {
+          const v = phase === 'invest' ? subs[g.id] : lastResult?.rows[g.id];
+          return (
+            <div key={g.id} className={v?.reason ? '' : 'empty'}>
+              <div className="row" style={{ justifyContent: 'space-between', gap: 6 }}>
+                <b>{groupLabel(g)}</b>
+                {v?.reason && <span className="small muted">{s.companies.A.name} {v.a} · {s.companies.B.name} {v.b}</span>}
+              </div>
+              <div>{v?.reason || (phase === 'invest' ? '아직 제출 전' : '미제출')}</div>
+            </div>
+          );
+        })}
+      </div>
 
       {phase === 'result' && lastResult && (
         <>
