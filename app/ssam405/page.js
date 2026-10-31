@@ -89,7 +89,6 @@ function Dashboard({ pin, onLogout }) {
               {isLast ? '🏆 최종 결과로' : '다음 문제로 ▶'}
             </button>
           )}
-          <a href="/present" target="_blank" rel="noreferrer"><button className="ghost" style={{ color: '#fff', borderColor: '#4b5563' }}>🖥️ 발표 화면</button></a>
         </div>
         <div className="t-groups">
           {groups.map((g) => {

@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
   const { meta, subs } = await readAll();
-  // 학생/발표 화면용: 다른 모둠의 투자 금액은 숨기고 제출 여부만 알려줌
+  // 학생 화면용: 다른 모둠의 투자 금액은 숨기고 제출 여부만 알려줌
   const submitted = Object.fromEntries(
     Object.entries(subs)
       .filter(([, v]) => v.round === meta.round)

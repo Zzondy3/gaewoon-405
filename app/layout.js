@@ -3,6 +3,7 @@ import './globals.css';
 export const metadata = {
   title: '그래프 투자 교실',
   description: '꺾은선 그래프를 해석해 투자하는 수업용 모의 투자',
+  robots: { index: false, follow: false },
 };
 
 export const viewport = { width: 'device-width', initialScale: 1 };

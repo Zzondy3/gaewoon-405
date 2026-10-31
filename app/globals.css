@@ -54,11 +54,8 @@ input:focus { outline: 3px solid #bfdbfe; border-color: var(--a); }
 .error { color: #b91c1c; font-weight: 600; }
 .warn { background: #fef3c7; color: #92400e; padding: 10px 14px; border-radius: 12px; font-size: 14px; }
 
-/* 홈 */
+/* 로그인 */
 .home { max-width: 560px; margin: 0 auto; padding: 48px 16px; }
-.home .links { display: grid; gap: 12px; margin-top: 24px; }
-.home .links a { display: block; text-decoration: none; padding: 20px; border-radius: var(--radius); background: #fff; font-weight: 700; font-size: 20px; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
-.home .links a span { display: block; font-weight: 400; font-size: 15px; color: var(--muted); }
 
 /* 학생 */
 .student { max-width: 520px; margin: 0 auto; padding: 16px 16px 40px; }
@@ -106,30 +103,10 @@ table.tbl th { font-size: 14px; color: var(--muted); font-weight: 600; }
 .answer { display: flex; gap: 12px; }
 .answer > div { flex: 1; border-radius: 12px; padding: 12px; }
 
-/* 발표 화면 */
-.present { min-height: 100vh; padding: 28px 40px; background: #fff; }
-.present .head { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; }
-.present h1 { font-size: 40px; }
-.present .story { font-size: 22px; color: #374151; margin: 8px 0 16px; }
-.present .layout { display: grid; grid-template-columns: 1.6fr 1fr; gap: 28px; align-items: start; }
-.present .q { font-size: 22px; font-weight: 700; background: #f3f4f6; padding: 14px 18px; border-radius: 14px; }
-.present .co h3 { font-size: 28px; }
-.present .rate { font-size: 44px; font-weight: 900; }
-.present .headline { font-size: 30px; font-weight: 800; }
-.present .expl { font-size: 21px; }
-.chart { margin: 0; }
-.chart figcaption { font-weight: 700; font-size: 18px; margin-bottom: 4px; }
-.chart svg { width: 100%; height: auto; display: block; }
-.legend { display: flex; gap: 18px; justify-content: center; font-weight: 600; }
-.legend i { display: inline-block; width: 22px; height: 4px; vertical-align: middle; border-radius: 2px; }
-.board { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
-.board > div { background: #f9fafb; border-radius: 12px; padding: 10px 14px; }
 .rank { font-size: 26px; }
 
 @media (max-width: 800px) {
-  .t-cols, .present .layout { grid-template-columns: 1fr; }
-  .present { padding: 16px; }
-  .present h1 { font-size: 28px; }
+  .t-cols { grid-template-columns: 1fr; }
 }
 @media (max-width: 380px) {
   .co-grid { grid-template-columns: 1fr; }
