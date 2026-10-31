@@ -1,0 +1,54 @@
+# 📈 그래프 투자 교실
+
+꺾은선 그래프를 해석해서 두 기업 중 어디에 얼마나 투자할지 모둠별로 정하는 수업용 모의 투자 프로그램입니다.
+
+| 화면 | 주소 | 누가 |
+|---|---|---|
+| 학생 화면 | `/student` | 모둠별 디벗(태블릿) |
+| 선생님 화면 | `/teacher` (비밀번호 기본 `1234`) | 선생님 PC |
+| 발표 화면 (선택) | `/present` | TV/프로젝터 — PPT 대신, 또는 PPT와 함께 |
+
+## 수업 흐름
+1. 선생님 화면 → **모둠 설정**에서 모둠 번호와 모둠원 이름 입력 (화면 위쪽에 항상 표시됨)
+2. 앞 화면(PPT 또는 `/present`)으로 그래프와 두 기업 자료를 보여 줌
+3. 학생 화면에서 모둠 선택 → A·B 기업에 투자할 코인 입력 → **제출하기** → "이렇게 투자하시겠습니까?" 확인 (결과 공개 전까지 **수정하기** 가능)
+4. 선생님 화면에 제출 현황이 실시간으로 표시됨 (모두 제출하면 결과 보기 버튼이 초록색)
+5. **📊 결과 보기** → 학생 화면에 코인 변화 반영, PPT로 결과 설명
+6. **다음 문제로 ▶** → 다음 문제. 마지막 문제 뒤에는 최종 순위
+
+계산: `투자 후 코인 = 남긴 코인 + A투자 × (1 + A수익률) + B투자 × (1 + B수익률)` (반올림). 미제출 모둠은 코인 그대로.
+
+## 문제(시나리오) 바꾸기
+`lib/scenarios.js` 하나만 고치면 됩니다. 파일 맨 위에 항목 설명이 있어요. 문제를 추가·삭제하면 문제 수도 자동으로 바뀝니다.
+정답(수익률)은 서버에만 있어서 결과 공개 전에는 학생 기기로 볼 수 없습니다.
+
+## 내 컴퓨터에서 실행 (VS Code)
+```bash
+npm install
+npm run dev
+```
+→ http://localhost:3000 . 이때는 저장소 없이 메모리에 저장됩니다(서버를 끄면 초기화).
+
+## Vercel 배포 (처음 한 번)
+1. 이 폴더를 GitHub 저장소에 올리기 (push)
+2. vercel.com → **Add New → Project** → 그 저장소 Import → Deploy
+3. 프로젝트 → **Storage** 탭 → **Upstash for Redis**(Marketplace) 만들기 → 이 프로젝트에 Connect
+   (환경변수 `KV_REST_API_URL`, `KV_REST_API_TOKEN` 이 자동으로 추가됨)
+4. (권장) **Settings → Environment Variables** 에 `TEACHER_PIN` = 원하는 비밀번호 추가
+5. **Deployments → Redeploy** 한 번 (환경변수 적용)
+
+> Redis를 연결하지 않으면 선생님 화면에 노란 경고가 뜹니다. Vercel에서는 서버가 여러 개로 나뉘어 돌기 때문에 꼭 연결해야 제출 내용이 사라지지 않아요.
+
+이후에는 GitHub에 push 할 때마다 Vercel이 자동으로 다시 배포합니다.
+
+## 폴더 구조
+```
+lib/scenarios.js     문제(시나리오) ← 주로 여기만 수정
+lib/game.js          결과 계산
+lib/store.js         저장소 (Redis / 메모리)
+app/student/page.js  학생 화면
+app/teacher/page.js  선생님 화면
+app/present/page.js  발표 화면
+components/LineChart.js 꺾은선 그래프
+app/api/*            서버 API
+```
