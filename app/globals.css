@@ -128,3 +128,7 @@ textarea { resize: vertical; }
 .rank-list .rk { width: 42px; font-weight: 800; }
 .rank-list.big li { font-size: 22px; padding: 10px 14px; }
 .rank-list.big .rk { width: 56px; }
+
+.sub-lines { display: grid; gap: 6px; font-size: 19px; text-align: left; }
+.sub-lines > div { display: flex; justify-content: space-between; gap: 12px; background: #f9fafb; border-radius: 10px; padding: 8px 14px; }
+.sub-lines span { font-weight: 800; white-space: nowrap; }

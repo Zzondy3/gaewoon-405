@@ -69,8 +69,9 @@ function Dashboard({ pin, onLogout }) {
   if (!data) return <main className="home"><p className="muted">불러오는 중…</p>{error && <p className="error">{error}</p>}</main>;
 
   const { groups, subs, phase, round, totalRounds, scenario: s, lastResult } = data;
-  const doneCount = groups.filter((g) => subs[g.id]).length;
-  const allDone = doneCount === groups.length && groups.length > 0;
+  const active = groups.filter((g) => g.coins > 0); // 코인이 0인 모둠은 참여 불가
+  const doneCount = active.filter((g) => subs[g.id]).length;
+  const allDone = doneCount === active.length && active.length > 0;
   const isLast = round + 1 >= totalRounds;
   const ranks = Object.fromEntries(rankList(groups).map((g) => [g.id, g.rank]));
   const skip = () => act('skip', {}, `${s.title}을(를) 결과 반영 없이 건너뛸까요?\n(이번 라운드 제출 내용은 지워지고 코인은 그대로예요)`);
@@ -82,7 +83,7 @@ function Dashboard({ pin, onLogout }) {
         <div className="t-bar">
           <h1>{phase === 'final' ? '모든 라운드 끝' : `${s?.title} / ${totalRounds}`}</h1>
           <span className={`badge ${phase === 'invest' ? 'live' : ''}`}>
-            {PHASE_LABEL[phase]}{phase === 'invest' && ` · ${doneCount}/${groups.length} 제출`}
+            {PHASE_LABEL[phase]}{phase === 'invest' && ` · ${doneCount}/${active.length} 제출`}
           </span>
           <div className="grow" />
           {phase === 'ready' && (
@@ -92,7 +93,7 @@ function Dashboard({ pin, onLogout }) {
             <button className="primary" style={{ background: allDone ? '#22c55e' : '#f59e0b' }} disabled={busy}
               onClick={() => act('close', {}, allDone
                 ? '투자를 마감하고 바로 결과를 공개할까요?'
-                : `아직 ${groups.length - doneCount}개 모둠이 제출하지 않았어요.\n제출하지 않은 모둠은 코인이 그대로예요.\n투자를 마감하고 바로 결과를 공개할까요?`)}>
+                : `아직 ${active.length - doneCount}개 모둠이 제출하지 않았어요.\n제출하지 않은 모둠은 코인이 그대로예요.\n투자를 마감하고 바로 결과를 공개할까요?`)}>
               ■ 투자 마감 · 결과 공개
             </button>
           )}
@@ -120,7 +121,8 @@ function Dashboard({ pin, onLogout }) {
                 </div>
                 <div className="gc">{coin(g.coins)}</div>
                 <div className="gs">
-                  {phase === 'invest' && (sub
+                  {phase === 'invest' && g.coins <= 0 && <span className="badge wait">0코인 · 참여 불가</span>}
+                  {phase === 'invest' && g.coins > 0 && (sub
                     ? <span><span className="badge ok">제출</span> A {sub.a} · B {sub.b}</span>
                     : <span className="badge wait">대기 중…</span>)}
                   {phase === 'result' && row && (

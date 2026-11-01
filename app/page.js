@@ -93,7 +93,14 @@ function Body({ data, group, refresh }) {
           <div className="muted small">선생님이 투자를 시작하면 여기에 입력칸이 나타나요.</div>
         </div>
       )}
-      {phase === 'invest' && <InvestForm key={round} data={data} group={group} refresh={refresh} />}
+      {phase === 'invest' && group.coins > 0 && <InvestForm key={round} data={data} group={group} refresh={refresh} />}
+      {phase === 'invest' && group.coins <= 0 && (
+        <div className="card stack" style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: 22, fontWeight: 800 }}>😢 코인이 0이에요</div>
+          <div className="muted">더 이상 투자할 수 없어요. 다른 모둠의 투자를 지켜봐요.</div>
+          <div className="look-up">👀 앞 화면을 봐 주세요</div>
+        </div>
+      )}
       {phase === 'result' && <Result data={data} group={group} />}
     </>
   );
@@ -106,9 +113,9 @@ function Submitted({ data, group }) {
   return (
     <>
       {d && (
-        <div style={{ fontSize: 19 }}>
-          <b style={{ color: 'var(--a)' }}>{s.companies.A.name}</b> {coin(d.a)} ·{' '}
-          <b style={{ color: 'var(--b)' }}>{s.companies.B.name}</b> {coin(d.b)}
+        <div className="sub-lines">
+          <div><b style={{ color: 'var(--a)' }}>{s.companies.A.name}</b><span>{coin(d.a)}</span></div>
+          <div><b style={{ color: 'var(--b)' }}>{s.companies.B.name}</b><span>{coin(d.b)}</span></div>
         </div>
       )}
       {d?.reason && <div className="reason-box">💬 {d.reason}</div>}
