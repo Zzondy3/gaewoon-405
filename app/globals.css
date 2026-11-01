@@ -118,3 +118,13 @@ textarea { resize: vertical; }
 .reasons { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
 .reasons > div { background: #f9fafb; border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px; }
 .reasons > div.empty { color: var(--muted); }
+
+/* 순위 */
+.rank-list { list-style: none; margin: 8px 0 0; padding: 0; }
+.rank-list li { display: flex; align-items: center; gap: 10px; padding: 7px 10px; border-radius: 10px; }
+.rank-list li + li { margin-top: 2px; }
+.rank-list li:nth-child(odd) { background: #f9fafb; }
+.rank-list li.me { background: #fef3c7; font-weight: 700; }
+.rank-list .rk { width: 42px; font-weight: 800; }
+.rank-list.big li { font-size: 22px; padding: 10px 14px; }
+.rank-list.big .rk { width: 56px; }

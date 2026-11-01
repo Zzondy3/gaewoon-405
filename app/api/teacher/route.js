@@ -13,12 +13,21 @@ export async function POST(req) {
   const { meta, subs } = await readAll();
   const ids = meta.groups.map((g) => g.id);
   const fail = (msg) => Response.json({ ok: false, error: msg }, { status: 400 });
+  const ok = async () => { await writeMeta(meta); return Response.json({ ok: true }); };
+
+  // 다음 라운드(또는 최종 결과)로 이동
+  const advance = async () => {
+    await clearSubs(ids);
+    meta.lastResult = null;
+    if (meta.round + 1 >= totalRounds) meta.phase = 'final';
+    else { meta.round += 1; meta.phase = 'ready'; }
+  };
 
   switch (body.action) {
     case 'login':
       return Response.json({ ok: true });
 
-    // 선생님 화면용 전체 상태: 각 모둠 투자 금액 + 정답(수익률) 미리 보기
+    // 선생님 화면용 전체 상태: 각 모둠 투자 금액·이유 + 결과 미리 보기
     case 'state':
       return Response.json(
         {
@@ -37,15 +46,24 @@ export async function POST(req) {
         { headers: { 'Cache-Control': 'no-store' } }
       );
 
+    case 'open': // 투자 시작 / 다시 열기
+      if (!['ready', 'closed'].includes(meta.phase)) return fail('지금은 투자를 시작할 수 없어요.');
+      meta.phase = 'invest';
+      return ok();
+
+    case 'close': // 투자 마감
+      if (meta.phase !== 'invest') return fail('투자 중이 아니에요.');
+      meta.phase = 'closed';
+      return ok();
+
     case 'reveal': {
-      if (meta.phase !== 'invest') return fail('이미 결과가 공개됐어요.');
+      if (meta.phase !== 'closed') return fail('먼저 투자를 마감해 주세요.');
       const { groups, lastResult } = computeResult(meta, subs);
       meta.groups = groups;
       meta.lastResult = lastResult;
       meta.history = [...(meta.history || []), lastResult];
       meta.phase = 'result';
-      await writeMeta(meta);
-      return Response.json({ ok: true });
+      return ok();
     }
 
     case 'undoReveal': {
@@ -54,47 +72,40 @@ export async function POST(req) {
       meta.groups = meta.groups.map((g) => (rows[g.id] ? { ...g, coins: rows[g.id].before } : g));
       meta.history = (meta.history || []).slice(0, -1);
       meta.lastResult = null;
-      meta.phase = 'invest';
-      await writeMeta(meta);
-      return Response.json({ ok: true });
+      meta.phase = 'closed';
+      return ok();
     }
 
-    case 'next': {
-      if (meta.phase === 'invest') return fail('먼저 결과를 공개해 주세요.');
-      await clearSubs(ids);
-      if (meta.round + 1 >= totalRounds) {
-        meta.phase = 'final';
-      } else {
-        meta.round += 1;
-        meta.phase = 'invest';
-        meta.lastResult = null;
-      }
-      await writeMeta(meta);
-      return Response.json({ ok: true });
-    }
+    case 'next':
+      if (meta.phase !== 'result') return fail('먼저 결과를 공개해 주세요.');
+      await advance();
+      return ok();
+
+    case 'skip': // 결과 반영 없이 이 라운드 건너뛰기
+      if (meta.phase === 'final') return fail('이미 끝났어요.');
+      if (meta.phase === 'result') return fail('결과가 공개된 라운드는 "다음 라운드"를 눌러 주세요.');
+      await advance();
+      return ok();
 
     case 'goto': {
       const r = Number(body.round);
-      if (!(r >= 0 && r < totalRounds)) return fail('없는 문제예요.');
+      if (!(r >= 0 && r < totalRounds)) return fail('없는 라운드예요.');
       await clearSubs(ids);
       meta.round = r;
-      meta.phase = 'invest';
+      meta.phase = 'ready';
       meta.lastResult = null;
-      await writeMeta(meta);
-      return Response.json({ ok: true });
+      return ok();
     }
 
-    case 'saveGroups': {
-      const list = (body.groups || [])
-        .map((g) => ({ id: Number(g.id), members: String(g.members || '').trim() }))
-        .filter((g) => Number.isInteger(g.id) && g.id > 0);
-      if (new Set(list.map((g) => g.id)).size !== list.length) return fail('모둠 번호가 겹쳐요.');
+    case 'setGroupCount': {
+      const n = Number(body.count);
+      if (!Number.isInteger(n) || n < 1 || n > 12) return fail('모둠 수는 1~12 사이로 적어 주세요.');
       const old = Object.fromEntries(meta.groups.map((g) => [g.id, g]));
-      meta.groups = list
-        .sort((x, y) => x.id - y.id)
-        .map((g) => ({ ...g, coins: old[g.id] ? old[g.id].coins : meta.startCoins }));
-      await writeMeta(meta);
-      return Response.json({ ok: true });
+      meta.groups = Array.from({ length: n }, (_, i) => i + 1).map((id) => ({
+        id,
+        coins: old[id] ? old[id].coins : meta.startCoins,
+      }));
+      return ok();
     }
 
     case 'setCoins': {
@@ -102,15 +113,14 @@ export async function POST(req) {
       const c = Number(body.coins);
       if (!g || !Number.isInteger(c) || c < 0) return fail('값을 확인해 주세요.');
       g.coins = c;
-      await writeMeta(meta);
-      return Response.json({ ok: true });
+      return ok();
     }
 
     case 'reset': {
       const start = Number(body.startCoins) > 0 ? Math.floor(Number(body.startCoins)) : meta.startCoins;
       const fresh = defaultMeta();
       fresh.startCoins = start;
-      fresh.groups = meta.groups.map((g) => ({ ...g, coins: start }));
+      fresh.groups = meta.groups.map((g) => ({ id: g.id, coins: start }));
       await clearAll();
       await writeMeta(fresh);
       return Response.json({ ok: true });
