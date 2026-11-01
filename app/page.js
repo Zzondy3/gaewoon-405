@@ -94,7 +94,6 @@ function Body({ data, group, refresh }) {
         </div>
       )}
       {phase === 'invest' && <InvestForm key={round} data={data} group={group} refresh={refresh} />}
-      {phase === 'closed' && <Closed data={data} group={group} />}
       {phase === 'result' && <Result data={data} group={group} />}
     </>
   );
@@ -114,17 +113,6 @@ function Submitted({ data, group }) {
       )}
       {d?.reason && <div className="reason-box">💬 {d.reason}</div>}
     </>
-  );
-}
-
-function Closed({ data, group }) {
-  const done = !!data.submitted[group.id];
-  return (
-    <div className="card stack" style={{ textAlign: 'center' }}>
-      <div><span className="badge">🔒 투자 마감</span></div>
-      {done ? <Submitted data={data} group={group} /> : <div className="muted">이번 라운드는 투자하지 않았어요. (코인 그대로)</div>}
-      <div className="look-up">👀 앞 화면을 봐 주세요</div>
-    </div>
   );
 }
 
@@ -172,7 +160,7 @@ function InvestForm({ data, group, refresh }) {
       <div className="card stack" style={{ textAlign: 'center' }}>
         <div><span className="badge ok">✔ 제출 완료</span></div>
         <Submitted data={data} group={group} />
-        <div className="muted small">마감 전까지는 수정할 수 있어요.</div>
+        <div className="muted small">선생님이 마감하기 전까지는 수정할 수 있어요.</div>
         <button className="ghost" onClick={() => setEditing(true)}>✏️ 수정하기</button>
       </div>
     );
@@ -246,7 +234,7 @@ function Result({ data, group }) {
         {['A', 'B'].map((k) => (
           <div key={k}>
             <b style={{ color: k === 'A' ? 'var(--a)' : 'var(--b)' }}>{s.companies[k].name}</b>{' '}
-            <b className={s.result[k].mult >= 1 ? 'up' : 'down'}>{s.result[k].text}</b>
+            <b className={s.result[k].gain > 0 ? 'up' : 'down'}>{s.result[k].text}</b>
           </div>
         ))}
       </div>

@@ -46,18 +46,13 @@ export async function POST(req) {
         { headers: { 'Cache-Control': 'no-store' } }
       );
 
-    case 'open': // 투자 시작 / 다시 열기
-      if (!['ready', 'closed'].includes(meta.phase)) return fail('지금은 투자를 시작할 수 없어요.');
+    case 'open': // 투자 시작
+      if (meta.phase !== 'ready') return fail('지금은 투자를 시작할 수 없어요.');
       meta.phase = 'invest';
       return ok();
 
-    case 'close': // 투자 마감
+    case 'close': { // 투자 마감 → 바로 결과 공개
       if (meta.phase !== 'invest') return fail('투자 중이 아니에요.');
-      meta.phase = 'closed';
-      return ok();
-
-    case 'reveal': {
-      if (meta.phase !== 'closed') return fail('먼저 투자를 마감해 주세요.');
       const { groups, lastResult } = computeResult(meta, subs);
       meta.groups = groups;
       meta.lastResult = lastResult;
@@ -72,7 +67,7 @@ export async function POST(req) {
       meta.groups = meta.groups.map((g) => (rows[g.id] ? { ...g, coins: rows[g.id].before } : g));
       meta.history = (meta.history || []).slice(0, -1);
       meta.lastResult = null;
-      meta.phase = 'closed';
+      meta.phase = 'invest';
       return ok();
     }
 

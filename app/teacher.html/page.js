@@ -8,7 +8,6 @@ const PIN_KEY = 'invest-class:pin';
 const PHASE_LABEL = {
   ready: '⏸ 대기 (PPT 보는 중)',
   invest: '✏️ 투자 중',
-  closed: '🔒 투자 마감',
   result: '📊 결과 공개됨',
   final: '🏆 최종 결과',
 };
@@ -83,7 +82,7 @@ function Dashboard({ pin, onLogout }) {
         <div className="t-bar">
           <h1>{phase === 'final' ? '모든 라운드 끝' : `${s?.title} / ${totalRounds}`}</h1>
           <span className={`badge ${phase === 'invest' ? 'live' : ''}`}>
-            {PHASE_LABEL[phase]}{(phase === 'invest' || phase === 'closed') && ` · ${doneCount}/${groups.length} 제출`}
+            {PHASE_LABEL[phase]}{phase === 'invest' && ` · ${doneCount}/${groups.length} 제출`}
           </span>
           <div className="grow" />
           {phase === 'ready' && (
@@ -91,22 +90,18 @@ function Dashboard({ pin, onLogout }) {
           )}
           {phase === 'invest' && (
             <button className="primary" style={{ background: allDone ? '#22c55e' : '#f59e0b' }} disabled={busy}
-              onClick={() => act('close', {}, allDone ? null : `아직 ${groups.length - doneCount}개 모둠이 제출하지 않았어요.\n마감하면 제출하지 않은 모둠은 이번 라운드에 투자하지 않은 것으로 처리돼요. 마감할까요?`)}>
-              ■ 투자 마감
+              onClick={() => act('close', {}, allDone
+                ? '투자를 마감하고 바로 결과를 공개할까요?'
+                : `아직 ${groups.length - doneCount}개 모둠이 제출하지 않았어요.\n제출하지 않은 모둠은 코인이 그대로예요.\n투자를 마감하고 바로 결과를 공개할까요?`)}>
+              ■ 투자 마감 · 결과 공개
             </button>
-          )}
-          {phase === 'closed' && (
-            <>
-              <button className="ghost" style={{ color: '#fff', borderColor: '#4b5563' }} disabled={busy} onClick={() => act('open')}>↩ 투자 다시 열기</button>
-              <button className="primary" style={{ background: '#22c55e' }} disabled={busy} onClick={() => act('reveal')}>📊 결과 보기</button>
-            </>
           )}
           {phase === 'result' && (
             <button className="primary" style={{ background: '#2563eb' }} disabled={busy} onClick={() => act('next')}>
               {isLast ? '🏆 최종 결과로' : '다음 라운드 ▶'}
             </button>
           )}
-          {['ready', 'invest', 'closed'].includes(phase) && (
+          {['ready', 'invest'].includes(phase) && (
             <button className="ghost" style={{ color: '#fff', borderColor: '#4b5563' }} disabled={busy} onClick={skip}>
               ⏭ 라운드 건너뛰기
             </button>
@@ -125,9 +120,9 @@ function Dashboard({ pin, onLogout }) {
                 </div>
                 <div className="gc">{coin(g.coins)}</div>
                 <div className="gs">
-                  {(phase === 'invest' || phase === 'closed') && (sub
+                  {phase === 'invest' && (sub
                     ? <span><span className="badge ok">제출</span> A {sub.a} · B {sub.b}</span>
-                    : <span className="badge wait">{phase === 'invest' ? '대기 중…' : '미제출'}</span>)}
+                    : <span className="badge wait">대기 중…</span>)}
                   {phase === 'result' && row && (
                     <span className={d > 0 ? 'up' : d < 0 ? 'down' : 'muted'}>
                       <b>{signed(d)}</b> <span className="muted">(A {row.a} · B {row.b})</span>
@@ -164,7 +159,7 @@ function Dashboard({ pin, onLogout }) {
 }
 
 function RoundPanel({ s, phase, lastResult, groups, subs, busy, act }) {
-  const showSubs = phase === 'invest' || phase === 'closed';
+  const showSubs = phase === 'invest';
   return (
     <div className="card stack">
       <h2>{s.title}</h2>
@@ -174,7 +169,7 @@ function RoundPanel({ s, phase, lastResult, groups, subs, busy, act }) {
             <div className="tag">{k}기업</div>
             <h3>{s.companies[k].name}</h3>
             <div>
-              결과: <b className={s.result[k].mult >= 1 ? 'up' : 'down'}>{s.result[k].text}</b>
+              결과: <b className={s.result[k].gain > 0 ? 'up' : 'down'}>{s.result[k].text}</b>
               {phase !== 'result' && <span className="muted small"> (학생에겐 비공개)</span>}
             </div>
           </div>
@@ -214,18 +209,23 @@ function RoundPanel({ s, phase, lastResult, groups, subs, busy, act }) {
                 return (
                   <tr key={g.id}>
                     <td>{groupLabel(g)} {!r.submitted && <span className="badge wait">미제출</span>}</td>
-                    <td>{r.before}</td><td>{r.a}</td><td>{r.b}</td><td><b>{r.after}</b></td>
+                    <td>{r.before}</td><td>{r.a} <Delta d={r.dA} /></td><td>{r.b} <Delta d={r.dB} /></td><td><b>{r.after}</b></td>
                     <td className={d > 0 ? 'up' : d < 0 ? 'down' : 'muted'}><b>{signed(d)}</b></td>
                   </tr>
                 );
               })}
             </tbody>
           </table>
-          <div><button className="danger small" disabled={busy} onClick={() => act('undoReveal', {}, '결과 공개를 취소하고 코인을 되돌릴까요?')}>↩ 결과 공개 취소</button></div>
+          <div><button className="danger small" disabled={busy} onClick={() => act('undoReveal', {}, '결과 공개를 취소하고 코인을 되돌릴까요?\n(다시 투자 중 상태가 돼요)')}>↩ 결과 공개 취소</button></div>
         </>
       )}
     </div>
   );
+}
+
+function Delta({ d }) {
+  if (!d) return null;
+  return <span className={d > 0 ? 'up' : 'down'} style={{ fontSize: 14 }}>({signed(d)})</span>;
 }
 
 function RankPanel({ groups }) {
