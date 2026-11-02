@@ -132,3 +132,8 @@ textarea { resize: vertical; }
 .sub-lines { display: grid; gap: 6px; font-size: 19px; text-align: left; }
 .sub-lines > div { display: flex; justify-content: space-between; gap: 12px; background: #f9fafb; border-radius: 10px; padding: 8px 14px; }
 .sub-lines span { font-weight: 800; white-space: nowrap; }
+
+/* 선생님 진행 버튼 묶음 (마감 / 다음 라운드 분리) */
+.t-ctrl { display: flex; gap: 8px; padding: 4px; border-radius: 14px; background: #1f2937; }
+.t-ctrl + .t-ctrl { margin-left: 16px; }
+.t-ctrl button:disabled { opacity: .3; }

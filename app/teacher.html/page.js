@@ -86,27 +86,27 @@ function Dashboard({ pin, onLogout }) {
             {PHASE_LABEL[phase]}{phase === 'invest' && ` · ${doneCount}/${active.length} 제출`}
           </span>
           <div className="grow" />
-          {phase === 'ready' && (
-            <button className="primary" style={{ background: '#22c55e' }} disabled={busy} onClick={() => act('open')}>▶ 투자 시작</button>
-          )}
-          {phase === 'invest' && (
-            <button className="primary" style={{ background: allDone ? '#22c55e' : '#f59e0b' }} disabled={busy}
-              onClick={() => act('close', {}, allDone
-                ? '투자를 마감하고 바로 결과를 공개할까요?'
-                : `아직 ${active.length - doneCount}개 모둠이 제출하지 않았어요.\n제출하지 않은 모둠은 코인이 그대로예요.\n투자를 마감하고 바로 결과를 공개할까요?`)}>
-              ■ 투자 마감 · 결과 공개
+          {/* 버튼 위치를 고정: 마감과 다음 라운드는 항상 다른 자리에 따로 있어요 */}
+          <div className="t-ctrl">
+            <button className="primary" style={{ background: '#22c55e' }} disabled={busy || phase !== 'ready'} onClick={() => act('open')}>
+              ▶ 투자 시작
             </button>
-          )}
-          {phase === 'result' && (
-            <button className="primary" style={{ background: '#2563eb' }} disabled={busy} onClick={() => act('next')}>
+            <button className="primary" style={{ background: allDone ? '#22c55e' : '#f59e0b' }} disabled={busy || phase !== 'invest'}
+              onClick={() => act('close', {}, allDone
+                ? '투자를 마감하고 결과를 공개할까요?'
+                : `아직 ${active.length - doneCount}개 모둠이 제출하지 않았어요.\n제출하지 않은 모둠은 코인이 그대로예요.\n투자를 마감하고 결과를 공개할까요?`)}>
+              ■ 투자 마감
+            </button>
+          </div>
+          <div className="t-ctrl">
+            <button className="primary" style={{ background: '#2563eb' }} disabled={busy || phase !== 'result'}
+              onClick={() => act('next', {}, isLast ? '최종 결과로 넘어갈까요?' : `${data.titles[round + 1]}(으)로 넘어갈까요?`)}>
               {isLast ? '🏆 최종 결과로' : '다음 라운드 ▶'}
             </button>
-          )}
-          {['ready', 'invest'].includes(phase) && (
-            <button className="ghost" style={{ color: '#fff', borderColor: '#4b5563' }} disabled={busy} onClick={skip}>
-              ⏭ 라운드 건너뛰기
+            <button className="ghost" style={{ color: '#fff', borderColor: '#4b5563' }} disabled={busy || !['ready', 'invest'].includes(phase)} onClick={skip}>
+              ⏭ 건너뛰기
             </button>
-          )}
+          </div>
         </div>
         <div className="t-groups">
           {groups.map((g) => {
