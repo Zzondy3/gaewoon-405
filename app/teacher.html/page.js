@@ -8,6 +8,7 @@ const PIN_KEY = 'invest-class:pin';
 const PHASE_LABEL = {
   ready: '⏸ 대기 (PPT 보는 중)',
   invest: '✏️ 투자 중',
+  closed: '🔒 투자 마감 (결과 비공개)',
   result: '📊 결과 공개됨',
   final: '🏆 최종 결과',
 };
@@ -83,19 +84,25 @@ function Dashboard({ pin, onLogout }) {
         <div className="t-bar">
           <h1>{phase === 'final' ? '모든 라운드 끝' : `${s?.title} / ${totalRounds}`}</h1>
           <span className={`badge ${phase === 'invest' ? 'live' : ''}`}>
-            {PHASE_LABEL[phase]}{phase === 'invest' && ` · ${doneCount}/${active.length} 제출`}
+            {PHASE_LABEL[phase]}{(phase === 'invest' || phase === 'closed') && ` · ${doneCount}/${active.length} 제출`}
           </span>
           <div className="grow" />
           {/* 버튼 위치를 고정: 마감과 다음 라운드는 항상 다른 자리에 따로 있어요 */}
           <div className="t-ctrl">
-            <button className="primary" style={{ background: '#22c55e' }} disabled={busy || phase !== 'ready'} onClick={() => act('open')}>
-              ▶ 투자 시작
+            <button className="primary" style={{ background: '#22c55e' }} disabled={busy || !['ready', 'closed'].includes(phase)}
+              onClick={() => act('open', {}, phase === 'closed' ? '마감을 취소하고 투자를 다시 열까요?' : null)}>
+              {phase === 'closed' ? '↩ 투자 다시 열기' : '▶ 투자 시작'}
             </button>
             <button className="primary" style={{ background: allDone ? '#22c55e' : '#f59e0b' }} disabled={busy || phase !== 'invest'}
               onClick={() => act('close', {}, allDone
-                ? '투자를 마감하고 결과를 공개할까요?'
-                : `아직 ${active.length - doneCount}개 모둠이 제출하지 않았어요.\n제출하지 않은 모둠은 코인이 그대로예요.\n투자를 마감하고 결과를 공개할까요?`)}>
+                ? null
+                : `아직 ${active.length - doneCount}개 모둠이 제출하지 않았어요.\n제출하지 않은 모둠은 코인이 그대로예요.\n투자를 마감할까요?`)}>
               ■ 투자 마감
+            </button>
+          </div>
+          <div className="t-ctrl">
+            <button className="primary" style={{ background: '#a855f7' }} disabled={busy || phase !== 'closed'} onClick={() => act('reveal')}>
+              📊 결과 보기
             </button>
           </div>
           <div className="t-ctrl">
@@ -103,7 +110,7 @@ function Dashboard({ pin, onLogout }) {
               onClick={() => act('next', {}, isLast ? '최종 결과로 넘어갈까요?' : `${data.titles[round + 1]}(으)로 넘어갈까요?`)}>
               {isLast ? '🏆 최종 결과로' : '다음 라운드 ▶'}
             </button>
-            <button className="ghost" style={{ color: '#fff', borderColor: '#4b5563' }} disabled={busy || !['ready', 'invest'].includes(phase)} onClick={skip}>
+            <button className="ghost" style={{ color: '#fff', borderColor: '#4b5563' }} disabled={busy || !['ready', 'invest', 'closed'].includes(phase)} onClick={skip}>
               ⏭ 건너뛰기
             </button>
           </div>
@@ -121,10 +128,10 @@ function Dashboard({ pin, onLogout }) {
                 </div>
                 <div className="gc">{coin(g.coins)}</div>
                 <div className="gs">
-                  {phase === 'invest' && g.coins <= 0 && <span className="badge wait">0코인 · 참여 불가</span>}
-                  {phase === 'invest' && g.coins > 0 && (sub
+                  {(phase === 'invest' || phase === 'closed') && g.coins <= 0 && <span className="badge wait">0코인 · 참여 불가</span>}
+                  {(phase === 'invest' || phase === 'closed') && g.coins > 0 && (sub
                     ? <span><span className="badge ok">제출</span> A {sub.a} · B {sub.b}</span>
-                    : <span className="badge wait">대기 중…</span>)}
+                    : <span className="badge wait">{phase === 'invest' ? '대기 중…' : '미제출'}</span>)}
                   {phase === 'result' && row && (
                     <span className={d > 0 ? 'up' : d < 0 ? 'down' : 'muted'}>
                       <b>{signed(d)}</b> <span className="muted">(A {row.a} · B {row.b})</span>
@@ -161,7 +168,7 @@ function Dashboard({ pin, onLogout }) {
 }
 
 function RoundPanel({ s, phase, lastResult, groups, subs, busy, act }) {
-  const showSubs = phase === 'invest';
+  const showSubs = phase === 'invest' || phase === 'closed';
   return (
     <div className="card stack">
       <h2>{s.title}</h2>
@@ -218,7 +225,7 @@ function RoundPanel({ s, phase, lastResult, groups, subs, busy, act }) {
               })}
             </tbody>
           </table>
-          <div><button className="danger small" disabled={busy} onClick={() => act('undoReveal', {}, '결과 공개를 취소하고 코인을 되돌릴까요?\n(다시 투자 중 상태가 돼요)')}>↩ 결과 공개 취소</button></div>
+          <div><button className="danger small" disabled={busy} onClick={() => act('undoReveal', {}, '결과 공개를 취소하고 코인을 되돌릴까요?\n(투자 마감 상태로 돌아가요)')}>↩ 결과 공개 취소</button></div>
         </>
       )}
     </div>
