@@ -18,7 +18,13 @@ export async function GET() {
       round: meta.round,
       phase: meta.phase,
       groups: meta.groups,
-      lastResult: meta.lastResult,
+      // 학생에게는 모둠별 코인 변화만 보내고, 기업별로 얼마나 얻고 잃었는지(dA, dB)는 빼요
+      lastResult: meta.lastResult && {
+        round: meta.lastResult.round,
+        rows: Object.fromEntries(
+          Object.entries(meta.lastResult.rows).map(([id, r]) => [id, { before: r.before, after: r.after, submitted: r.submitted }])
+        ),
+      },
       submitted,
       scenario: publicScenario(meta.round, meta.phase),
     },

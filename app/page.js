@@ -243,20 +243,11 @@ function InvestForm({ data, group, refresh }) {
 }
 
 function Result({ data, group }) {
-  const s = data.scenario;
   const row = data.lastResult?.rows[group.id];
   if (!row) return <div className="look-up">👀 앞 화면을 봐 주세요</div>;
   const diff = row.after - row.before;
   return (
     <div className="card stack" style={{ textAlign: 'center' }}>
-      <div className="stack small" style={{ textAlign: 'left' }}>
-        {['A', 'B'].map((k) => (
-          <div key={k}>
-            <b style={{ color: k === 'A' ? 'var(--a)' : 'var(--b)' }}>{s.companies[k].name}</b>{' '}
-            <b className={s.result[k].gain > 0 ? 'up' : 'down'}>{s.result[k].text}</b>
-          </div>
-        ))}
-      </div>
       <div style={{ fontSize: 20 }}>
         {coin(row.before)} → <b className="coins">{coin(row.after)}</b>
       </div>
